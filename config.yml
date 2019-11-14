@@ -14,8 +14,8 @@ liquibase-database:
   url: jdbc:postgresql://localhost:5432/barrier
 
 database:
-  user: postgres
-  password: mysecretpassword
+  user: application_user
+  password: pass
   url: jdbc:postgresql://localhost:5432/barrier
 
 # Logging defines how the application will log. During development logs will be sent to standard out.

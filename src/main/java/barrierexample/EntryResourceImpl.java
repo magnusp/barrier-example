@@ -7,32 +7,30 @@ import se.fortnox.reactivewizard.jaxrs.WebException;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.PathParam;
-
-import java.util.stream.Collectors;
-
-import static rx.Observable.just;
-
+import java.util.List;
 
 @Singleton
 public class EntryResourceImpl implements EntryResource {
-
-	private final EntryDao entryDao;
+	private final IsolatedDaoFactory daoFactory;
 
 	@Inject
-	public EntryResourceImpl(EntryDao entryDao) {
-		this.entryDao = entryDao;
+	public EntryResourceImpl(IsolatedDaoFactory daoFactory) {
+		this.daoFactory = daoFactory;
 	}
 
-	public Observable<String> getEntries(@PathParam("barrier") String barrier) {
-		return entryDao
-			.getEntries()
-			.map(s -> {
-				if(!s.contains(barrier)) {
-					throw new WebException(HttpResponseStatus.INTERNAL_SERVER_ERROR, "barrier.crossed");
-				}
-				return s + "\n";
-			})
-			.toList()
-			.map(strings -> strings.stream().collect(Collectors.joining("")));
+	public Observable<List<Entry>> getEntries(@PathParam("barrier") int barrier) {
+		return daoFactory.get(EntryDao.class, barrier)
+			.concatMap(entryDao -> {
+				return entryDao
+					.getEntries()
+					.map(entry -> {
+						if (entry.getBarrier() != barrier) {
+							throw new WebException(HttpResponseStatus.INTERNAL_SERVER_ERROR, "barrier.crossed");
+						}
+						return entry;
+					})
+					.toList();
+			});
+
 	}
 }

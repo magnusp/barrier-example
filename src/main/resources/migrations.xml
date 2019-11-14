@@ -30,4 +30,14 @@
 			<column name="data">In barrier 2</column>
 		</insert>
 	</changeSet>
+
+	<changeSet id="barrier-3" author="magnus.persson">
+		<sql>
+			ALTER TABLE entry ENABLE ROW LEVEL SECURITY;
+			create policy rowbarrier on entry
+				using (barrier = current_setting('application.selected_barrier')::numeric);
+			CREATE USER application_user PASSWORD 'pass';
+			grant all on entry to application_user;
+		</sql>
+	</changeSet>
 </databaseChangeLog>
